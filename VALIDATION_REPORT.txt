@@ -1,0 +1,24 @@
+VALIDATION REPORT — 2026-08-24
+
+PASS - TypeScript/TSX syntax transpilation: 90 files
+PASS - Local import resolution
+PASS - Frontend RPC calls mapped in Supabase generated types
+PASS - Main linked routes exist
+PASS - package.json/components.json parse as JSON
+PASS - New SQL migration has balanced dollar-quoted blocks
+PASS - SECURITY DEFINER functions in the new migration declare search_path
+PASS - No leftover REXCON brand strings in application TS/TSX
+PASS - No hardcoded public shipping prices / discount percentages detected in application TS/TSX
+PASS - No service-role or Mercado Pago secret references in client application code
+
+LIMITATION
+A full Vite build / ESLint run was not possible in this review environment because the exported ZIP did not contain node_modules and dependency installation did not complete. The SQL migration was reviewed structurally but could not be executed against the live Supabase database from this environment.
+
+FIRST CHECK IN LOVABLE
+1. Apply supabase/migrations/20260824011500_hardening_auth_checkout.sql
+2. Regenerate Supabase types if Lovable does so automatically.
+3. Run build and lint.
+4. Test signup -> email confirmation -> /mi-cuenta.
+5. Test B2B pending/approval and price tier.
+6. Test bank-transfer checkout, double click, cancel pending order, confirm payment, fulfillment flow.
+7. Test quote request and admin review.
