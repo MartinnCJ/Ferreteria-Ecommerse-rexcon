@@ -7,13 +7,13 @@ export function SiteFooter() {
     <footer className="footer">
       <div className="container footer-grid">
         <div>
-          <div className="brand footer-brand">
+          <Link to="/" className="brand footer-brand" aria-label="Ir al inicio de REXCON">
             <BrandMark />
             <span>
               <strong>{BRAND.name}</strong>
               <small>PROFESSIONAL TOOLS</small>
             </span>
-          </div>
+          </Link>
           <p>
             {BRAND.tagline}
             <br />
@@ -24,6 +24,7 @@ export function SiteFooter() {
           <b>Comprar</b>
           <Link to="/productos">Productos</Link>
           <Link to="/mayoristas">Venta mayorista</Link>
+          <a href="/#quienes-somos">Quiénes somos</a>
         </div>
         <div>
           <b>Ayuda</b>

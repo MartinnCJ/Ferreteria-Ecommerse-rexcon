@@ -28,6 +28,11 @@ export function CartDrawer() {
     () => new Map((catalog?.products ?? []).map((product) => [product.id, product])),
     [catalog?.products],
   );
+  const displaySubtotal = cart.lines.reduce((sum, line) => {
+    const product = products.get(line.productId);
+    const unitPrice = prices.get(line.productId)?.unit_price ?? product?.retail_price ?? 0;
+    return sum + unitPrice * line.quantity;
+  }, 0);
   const hasUnavailable = cart.lines.some((line) => {
     const product = products.get(line.productId);
     const available = prices.get(line.productId)?.available_stock ?? product?.available_stock ?? 0;
@@ -152,7 +157,7 @@ export function CartDrawer() {
           <footer className="drawer-foot">
             <div className="row">
               <span>Subtotal</span>
-              <b>{money(subtotal)}</b>
+              <b>{isLoading ? "Calculando..." : money(displaySubtotal)}</b>
             </div>
             <div className="row">
               <span>Despacho</span>

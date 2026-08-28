@@ -37,7 +37,7 @@ function Home() {
 
   return (
     <>
-      <section className="hero">
+      <section className="hero rexcon-hero">
         <div className="container hero-grid">
           <div>
             <span className="eyebrow">Marca propia · Importación directa</span>
@@ -81,6 +81,21 @@ function Home() {
             <Link to="/auth" search={{ modo: "registro" }} className="btn primary block">
               Crear cuenta comercial
             </Link>
+          </div>
+        </div>
+      </section>
+
+      <section id="quienes-somos" className="about-band">
+        <div className="container about-grid">
+          <span className="eyebrow">Quiénes somos</span>
+          <h2>Experiencia que se traduce en herramientas para todos los días.</h2>
+          <div>
+            <p>
+              REXCON se construye sobre a&ntilde;os de experiencia en el rubro de herramientas y
+              abastecimiento. Seleccionamos soluciones para faena, taller, empresa y ferretería,
+              con productos confiables y una respuesta comercial clara.
+            </p>
+            <Link to="/mayoristas" className="link">Conoce nuestra venta mayorista</Link>
           </div>
         </div>
       </section>

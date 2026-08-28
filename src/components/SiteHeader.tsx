@@ -35,7 +35,7 @@ export function SiteHeader() {
       </div>
       <header className="header">
         <div className="header-inner">
-          <Link to="/" className="brand">
+          <Link to="/" className="brand" aria-label="Ir al inicio de REXCON">
             <BrandMark />
             <span>
               <strong>{BRAND.name}</strong>
@@ -53,6 +53,7 @@ export function SiteHeader() {
             <Link to="/mayoristas" activeProps={{ className: "active" }}>
               Venta mayorista
             </Link>
+            <a href="/#quienes-somos">Quiénes somos</a>
             {isAdmin && (
               <Link to="/admin" activeProps={{ className: "active" }}>
                 Admin
@@ -97,6 +98,7 @@ export function SiteHeader() {
             <Link to="/">Inicio</Link>
             <Link to="/productos">Productos</Link>
             <Link to="/mayoristas">Venta mayorista</Link>
+            <a href="/#quienes-somos">Quiénes somos</a>
             {user && <Link to="/mi-cuenta">Mi cuenta</Link>}
             {isAdmin && <Link to="/admin">Admin</Link>}
             {user ? (
