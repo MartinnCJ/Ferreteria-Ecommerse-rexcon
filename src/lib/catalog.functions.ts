@@ -5,11 +5,17 @@ import type { Database } from "@/integrations/supabase/types";
 import type { Category, PublicProduct } from "@/types";
 
 function publicClient() {
-  const key = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
+  // VITE_* values are public by design and are available at build time on Vercel.
+  const url = process.env["SUPABASE_URL"] || import.meta.env["VITE_SUPABASE_URL"];
+  const key = process.env["SUPABASE_PUBLISHABLE_KEY"] || import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"];
+  if (!url || !key) {
+    throw new Error("Missing public Supabase configuration for the catalog.");
+  }
+
   if (key.startsWith("sb_secret_")) {
     throw new Error("El catálogo público no debe ejecutarse con una Supabase secret key");
   }
-  return createClient<Database>(process.env["SUPABASE_URL"]!, key, {
+  return createClient<Database>(url, key, {
     auth: { persistSession: false, autoRefreshToken: false },
     global: {
       fetch: (input, init) => {
