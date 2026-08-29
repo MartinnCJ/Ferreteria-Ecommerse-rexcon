@@ -10,11 +10,11 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as MayoristasRouteImport } from './routes/mayoristas'
 import { Route as MiCuentaRouteImport } from './routes/mi-cuenta'
 import { Route as RestablecerClaveRouteImport } from './routes/restablecer-clave'
-import { Route as MayoristasRouteImport } from './routes/mayoristas'
 import { Route as ProductosIndexRouteImport } from './routes/productos.index'
 import { Route as ProductosSlugRouteImport } from './routes/productos.$slug'
 
@@ -23,14 +23,19 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminRoute = AdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
+const MayoristasRoute = MayoristasRouteImport.update({
+  id: '/mayoristas',
+  path: '/mayoristas',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MiCuentaRoute = MiCuentaRouteImport.update({
@@ -41,11 +46,6 @@ const MiCuentaRoute = MiCuentaRouteImport.update({
 const RestablecerClaveRoute = RestablecerClaveRouteImport.update({
   id: '/restablecer-clave',
   path: '/restablecer-clave',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MayoristasRoute = MayoristasRouteImport.update({
-  id: '/mayoristas',
-  path: '/mayoristas',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProductosIndexRoute = ProductosIndexRouteImport.update({
@@ -61,59 +61,75 @@ const ProductosSlugRoute = ProductosSlugRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
   '/admin': typeof AdminRoute
+  '/auth': typeof AuthRoute
+  '/mayoristas': typeof MayoristasRoute
   '/mi-cuenta': typeof MiCuentaRoute
   '/restablecer-clave': typeof RestablecerClaveRoute
-  '/mayoristas': typeof MayoristasRoute
   '/productos/$slug': typeof ProductosSlugRoute
   '/productos/': typeof ProductosIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
   '/admin': typeof AdminRoute
+  '/auth': typeof AuthRoute
+  '/mayoristas': typeof MayoristasRoute
   '/mi-cuenta': typeof MiCuentaRoute
   '/restablecer-clave': typeof RestablecerClaveRoute
-  '/mayoristas': typeof MayoristasRoute
   '/productos/$slug': typeof ProductosSlugRoute
   '/productos': typeof ProductosIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
   '/admin': typeof AdminRoute
+  '/auth': typeof AuthRoute
+  '/mayoristas': typeof MayoristasRoute
   '/mi-cuenta': typeof MiCuentaRoute
   '/restablecer-clave': typeof RestablecerClaveRoute
-  '/mayoristas': typeof MayoristasRoute
   '/productos/$slug': typeof ProductosSlugRoute
   '/productos/': typeof ProductosIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/admin' | '/mi-cuenta' | '/restablecer-clave' | '/mayoristas' | '/productos/$slug' | '/productos/'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/auth'
+    | '/mayoristas'
+    | '/mi-cuenta'
+    | '/restablecer-clave'
+    | '/productos/$slug'
+    | '/productos/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/admin' | '/mi-cuenta' | '/restablecer-clave' | '/mayoristas' | '/productos/$slug' | '/productos'
+  to:
+    | '/'
+    | '/admin'
+    | '/auth'
+    | '/mayoristas'
+    | '/mi-cuenta'
+    | '/restablecer-clave'
+    | '/productos/$slug'
+    | '/productos'
   id:
     | '__root__'
     | '/'
-    | '/auth'
     | '/admin'
+    | '/auth'
+    | '/mayoristas'
     | '/mi-cuenta'
     | '/restablecer-clave'
-    | '/mayoristas'
     | '/productos/$slug'
     | '/productos/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AuthRoute: typeof AuthRoute
   AdminRoute: typeof AdminRoute
+  AuthRoute: typeof AuthRoute
+  MayoristasRoute: typeof MayoristasRoute
   MiCuentaRoute: typeof MiCuentaRoute
   RestablecerClaveRoute: typeof RestablecerClaveRoute
-  MayoristasRoute: typeof MayoristasRoute
   ProductosSlugRoute: typeof ProductosSlugRoute
   ProductosIndexRoute: typeof ProductosIndexRoute
 }
@@ -127,6 +143,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -134,11 +157,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin': {
-      id: '/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminRouteImport
+    '/mayoristas': {
+      id: '/mayoristas'
+      path: '/mayoristas'
+      fullPath: '/mayoristas'
+      preLoaderRoute: typeof MayoristasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mi-cuenta': {
@@ -153,13 +176,6 @@ declare module '@tanstack/react-router' {
       path: '/restablecer-clave'
       fullPath: '/restablecer-clave'
       preLoaderRoute: typeof RestablecerClaveRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/mayoristas': {
-      id: '/mayoristas'
-      path: '/mayoristas'
-      fullPath: '/mayoristas'
-      preLoaderRoute: typeof MayoristasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/productos/': {
@@ -181,11 +197,11 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AuthRoute: AuthRoute,
   AdminRoute: AdminRoute,
+  AuthRoute: AuthRoute,
+  MayoristasRoute: MayoristasRoute,
   MiCuentaRoute: MiCuentaRoute,
   RestablecerClaveRoute: RestablecerClaveRoute,
-  MayoristasRoute: MayoristasRoute,
   ProductosSlugRoute: ProductosSlugRoute,
   ProductosIndexRoute: ProductosIndexRoute,
 }

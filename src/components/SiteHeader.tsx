@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
+import { Moon, Sun } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/hooks/useCart";
 import { useToast } from "@/hooks/useToast";
@@ -9,6 +10,7 @@ import { userErrorMessage } from "@/lib/errors";
 
 export function SiteHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
   const { user, profile, isAdmin, signOut } = useAuth();
   const cart = useCart();
   const notify = useToast();
@@ -16,6 +18,17 @@ export function SiteHeader() {
 
   const displayName =
     profile?.first_name || profile?.company_name || user?.email?.split("@")[0] || "Mi cuenta";
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("rexcon_theme");
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    setDarkMode(savedTheme ? savedTheme === "dark" : prefersDark);
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", darkMode);
+    localStorage.setItem("rexcon_theme", darkMode ? "dark" : "light");
+  }, [darkMode]);
 
   async function handleSignOut() {
     try {
@@ -26,6 +39,14 @@ export function SiteHeader() {
     } catch (error) {
       notify(userErrorMessage(error, "No pudimos cerrar la sesión."));
     }
+  }
+
+  function scrollToAbout(event: MouseEvent<HTMLAnchorElement>) {
+    if (window.location.pathname !== "/") return;
+    const aboutSection = document.getElementById("quienes-somos");
+    if (!aboutSection) return;
+    event.preventDefault();
+    aboutSection.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
   return (
@@ -47,18 +68,18 @@ export function SiteHeader() {
             <Link to="/" activeOptions={{ exact: true }} activeProps={{ className: "active" }}>
               Inicio
             </Link>
+            <a href="/#quienes-somos" onClick={scrollToAbout}>Quiénes somos</a>
+            {isAdmin && (
+              <Link to="/admin" activeProps={{ className: "active" }}>
+                Admin
+              </Link>
+              )}
             <Link to="/productos" activeProps={{ className: "active" }}>
               Productos
             </Link>
             <Link to="/mayoristas" activeProps={{ className: "active" }}>
               Venta mayorista
             </Link>
-            <a href="/#quienes-somos">Quiénes somos</a>
-            {isAdmin && (
-              <Link to="/admin" activeProps={{ className: "active" }}>
-                Admin
-              </Link>
-            )}
           </nav>
 
           <div className="header-actions">
@@ -75,6 +96,15 @@ export function SiteHeader() {
                 Ingresar
               </Link>
             )}
+            <button
+              className="theme-toggle"
+              type="button"
+              onClick={() => setDarkMode((current) => !current)}
+              aria-label={darkMode ? "Activar modo claro" : "Activar modo oscuro"}
+              title={darkMode ? "Activar modo claro" : "Activar modo oscuro"}
+            >
+              {darkMode ? <Sun size={18} aria-hidden="true" /> : <Moon size={18} aria-hidden="true" />}
+            </button>
             <button
               className="cart-button"
               onClick={() => cart.setOpen(true)}
@@ -98,7 +128,7 @@ export function SiteHeader() {
             <Link to="/">Inicio</Link>
             <Link to="/productos">Productos</Link>
             <Link to="/mayoristas">Venta mayorista</Link>
-            <a href="/#quienes-somos">Quiénes somos</a>
+            <a href="/#quienes-somos" onClick={scrollToAbout}>Quiénes somos</a>
             {user && <Link to="/mi-cuenta">Mi cuenta</Link>}
             {isAdmin && <Link to="/admin">Admin</Link>}
             {user ? (

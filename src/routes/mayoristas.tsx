@@ -158,8 +158,8 @@ function WholesalePage() {
         <details>
           <summary>¿Puedo cambiar o devolver productos?</summary>
           <p>
-            Las condiciones de cambios, devoluciones y garantía deben publicarse según la política
-            comercial vigente y el tipo de producto.
+          Las condiciones de cambios, devoluciones y garantía deben publicarse según la política
+          comercial vigente y el tipo de producto.
           </p>
         </details>
       </section>
