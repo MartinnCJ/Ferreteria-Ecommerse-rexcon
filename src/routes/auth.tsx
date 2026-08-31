@@ -288,8 +288,8 @@ function AuthPage() {
           {error && <div className="pending-box">{error}</div>}
           {mode === "registro" && isB2B && (
             <div className="pending-box">
-              Los precios comerciales se activan tras validar tus datos. Mientras tanto verás precio
-              retail.
+              Los precios comerciales se activan tras validar tus datos. Hasta entonces no se
+              mostrarán precios en tu cuenta comercial.
             </div>
           )}
 

@@ -119,26 +119,6 @@ function Home() {
         </div>
       </section>
 
-      <section className="container section">
-        <div className="grid categories">
-          {data.categories.map((category) => (
-            <Link
-              key={category.id}
-              to="/productos"
-              search={{ categoria: category.slug }}
-              className="category-card"
-            >
-              <b>{category.name}</b>
-              <span>
-                {data.products.filter((product) => {
-                  const ids = categoryIdsIncludingDescendants(data.categories, category.id);
-                  return product.category_id ? ids.has(product.category_id) : false;
-                }).length} productos
-              </span>
-            </Link>
-          ))}
-        </div>
-      </section>
     </>
   );
 }

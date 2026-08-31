@@ -299,7 +299,7 @@ function AccountPage() {
               <div className="card-title">
                 <div>
                   <h2>Acceso a precios comerciales</h2>
-                  <p>Solicita un nivel comercial. Hasta la aprobación seguirás viendo precio retail.</p>
+                  <p>Solicita un nivel comercial. Los precios se mostrarán cuando la solicitud sea aprobada.</p>
                 </div>
               </div>
               <div className="auth-form">

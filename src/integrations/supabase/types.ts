@@ -820,6 +820,10 @@ export type Database = {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["customer_type"]
       }
+      ensure_my_profile: {
+        Args: never
+        Returns: Database["public"]["Tables"]["profiles"]["Row"]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

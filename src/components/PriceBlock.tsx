@@ -32,6 +32,20 @@ export function PriceBlock({
     ["professional", "company", "wholesale", "distributor"].includes(profile!.customer_type) &&
     profile!.b2b_status !== "approved";
 
+  if (pendingB2B) {
+    return (
+      <div className="price-block">
+        <div className="price-label">Precio comercial</div>
+        <div className={compact ? "price compact price-awaiting" : "price price-awaiting"}>
+          En revisión
+        </div>
+        <div className="price-pending">
+          Tu solicitud comercial está pendiente. Te avisaremos cuando tus precios estén activos.
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="price-block">
       <div className="price-label">
@@ -48,11 +62,6 @@ export function PriceBlock({
         <Link to="/auth" search={{ modo: "registro" }} className="price-access">
           🔒 ¿Eres profesional o ferretería? Crea tu cuenta para precios comerciales
         </Link>
-      )}
-      {pendingB2B && (
-        <div className="price-pending">
-          ⏳ Tu acceso comercial está pendiente. Mientras tanto ves precio retail.
-        </div>
       )}
     </div>
   );

@@ -43,7 +43,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     ]);
     if (profileError) throw profileError;
     if (rolesError) throw rolesError;
-    setProfile((profileData as Profile | null) ?? null);
+    let resolvedProfile = profileData as Profile | null;
+    if (!resolvedProfile) {
+      const { data: repairedProfile, error: repairError } = await supabase.rpc("ensure_my_profile");
+      if (repairError) throw repairError;
+      resolvedProfile = repairedProfile as Profile | null;
+    }
+    setProfile(resolvedProfile);
     setIsAdmin(Boolean(roles?.some((r) => r.role === "admin")));
   }, []);
 

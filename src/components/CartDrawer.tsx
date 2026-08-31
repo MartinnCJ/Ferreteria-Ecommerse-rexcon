@@ -23,6 +23,11 @@ export function CartDrawer() {
   const [quoting, setQuoting] = useState(false);
   const { data: catalog } = useQuery(catalogQueryOptions());
   const { prices, subtotal, isLoading, hasError } = useCartPricing(cart.lines);
+  const hasPendingCommercialAccess = Boolean(
+    profile &&
+      ["professional", "company", "wholesale", "distributor"].includes(profile.customer_type) &&
+      profile.b2b_status !== "approved",
+  );
 
   const products = useMemo(
     () => new Map((catalog?.products ?? []).map((product) => [product.id, product])),
@@ -140,8 +145,8 @@ export function CartDrawer() {
                       </button>
                     </div>
                     <div className="line-total">
-                      <b>{isLoading ? "…" : money(unit * line.quantity)}</b>
-                      <small>{money(unit)} c/u</small>
+                      <b>{hasPendingCommercialAccess ? "Por confirmar" : isLoading ? "…" : money(unit * line.quantity)}</b>
+                      <small>{hasPendingCommercialAccess ? "Cotización comercial" : `${money(unit)} c/u`}</small>
                     </div>
                   </div>
                   <button className="link-danger" onClick={() => cart.remove(line.productId)}>
@@ -157,7 +162,7 @@ export function CartDrawer() {
           <footer className="drawer-foot">
             <div className="row">
               <span>Subtotal</span>
-              <b>{isLoading ? "Calculando..." : money(displaySubtotal)}</b>
+              <b>{hasPendingCommercialAccess ? "Por confirmar" : isLoading ? "Calculando..." : money(displaySubtotal)}</b>
             </div>
             <div className="row">
               <span>Despacho</span>
@@ -166,12 +171,13 @@ export function CartDrawer() {
             <small className="hint">El costo de despacho se calcula con la región y comuna en el checkout.</small>
             {hasError && <div className="pending-box">No pudimos validar uno o más precios. Intenta nuevamente.</div>}
             {hasUnavailable && <div className="pending-box">Ajustamos o detectamos productos sin stock suficiente.</div>}
+            {hasPendingCommercialAccess && <div className="pending-box">Tu cuenta comercial está en revisión. Solicita una cotización mientras activamos tus precios.</div>}
             <button
               className="btn primary block"
               onClick={() => setCheckoutOpen(true)}
-              disabled={isLoading || hasError || hasUnavailable}
+              disabled={hasPendingCommercialAccess || isLoading || hasError || hasUnavailable}
             >
-              {isLoading ? "Validando precios…" : "Continuar"}
+              {hasPendingCommercialAccess ? "Precios en revisión" : isLoading ? "Validando precios…" : "Continuar"}
             </button>
             {canRequestQuote && (
               <button
