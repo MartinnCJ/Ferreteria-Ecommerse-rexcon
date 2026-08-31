@@ -104,4 +104,7 @@
 
 /* Account cards in dark mode */
 .dark .profile-card,.dark .orders-card{background:#1c262e;border-color:#3b4852;color:#edf2f5}.dark .profile-card h3,.dark .profile-card strong,.dark .orders-card h2{color:#f5f7f8}.dark .profile-card p,.dark .card-title p,.dark .account-header p,.dark .profile-card>small{color:#aab7c0}.dark .profile-card hr,.dark .order-row{border-color:#3b4852}.dark .role-badge{background:#10294d;border-color:#315b8a;color:#d8eaff}.dark .pending-box{background:#3a2e17;border-left:3px solid #f2c230;color:#f6dfab}.dark .auth-form label{color:#c9d3d9}.dark .auth-form input,.dark .auth-form select{background:#151e25;color:#f4f7f8;border-color:#465660}.dark .auth-form input::placeholder{color:#8796a0}.dark .orders-card .btn.secondary{background:#25313a;color:#f4f7f8;border-color:#52636e}.dark .orders-card .btn.secondary:hover{background:#f2c230;color:#111820;border-color:#f2c230}
+
+/* Versioned visual patch: forces a fresh immutable stylesheet on deployment. */
+:root{--rexcon-visual-patch:20260831}
 @media (max-width:760px){.section-head .filters{width:100%;align-items:stretch;flex-direction:column}.section-head .filters input,.section-head .filters select{width:100%}.chips{flex-wrap:nowrap;overflow-x:auto;padding:2px 0 8px;margin-bottom:18px}.chip{flex:0 0 auto}}
