@@ -45,41 +45,41 @@ function Home() {
               Herramientas hechas <span className="hl">para trabajar</span>
             </h1>
             <p>
-              {BRAND.tagline} Equipamiento profesional con stock en Chile, garantía directa y
-              condiciones especiales para maestros, empresas y ferreterías.
+              Equipamiento profesional seleccionado para rendir en el trabajo diario, con stock en
+              Chile, garantía directa y condiciones especiales para profesionales, empresas y
+              ferreterías.
             </p>
             <div className="hero-actions">
               <Link to="/productos" className="btn primary">
-                Ver catálogo
+                Ver productos
               </Link>
               <Link to="/mayoristas" className="btn ghost">
-                Quiero precios mayoristas
+                Venta mayorista
               </Link>
             </div>
             <div className="hero-stats">
               <div>
-                <b>{data.products.length}</b>
-                <span>Productos activos</span>
+                <b>Despacho a todo Chile</b>
+                <span>Envíos por región</span>
               </div>
               <div>
-                <b>Chile</b>
-                <span>Despacho por región</span>
+                <b>Garantía directa</b>
+                <span>Respaldo según producto</span>
               </div>
               <div>
-                <b>Directa</b>
-                <span>Garantía según producto</span>
+                <b>Precios comerciales</b>
+                <span>Para profesionales y empresas</span>
               </div>
             </div>
           </div>
           <div className="hero-panel">
             <div className="panel-title">Acceso comercial</div>
-            <ul>
-              <li>Precios PRO, empresa, mayorista y distribuidor</li>
-              <li>Descuentos automáticos por volumen</li>
-              <li>Acceso comercial sujeto a aprobación</li>
-            </ul>
+            <div className="panel-copy">
+              <p>Precios especiales para profesionales, empresas, ferreterías y distribuidores.</p>
+              <p>Descuentos por volumen. Acceso sujeto a aprobación.</p>
+            </div>
             <Link to="/auth" search={{ modo: "registro" }} className="btn primary block">
-              Crear cuenta comercial
+              Solicitar acceso comercial
             </Link>
           </div>
         </div>
@@ -88,14 +88,17 @@ function Home() {
       <section id="quienes-somos" className="about-band">
         <div className="container about-grid">
           <span className="eyebrow">Quiénes somos</span>
-          <h2>Experiencia que se traduce en herramientas para todos los días.</h2>
+          <h2>Herramientas que responden cuando el trabajo exige más.</h2>
           <div>
             <p>
-              REXCON se construye sobre a&ntilde;os de experiencia en el rubro de herramientas y
-              abastecimiento. Seleccionamos soluciones para faena, taller, empresa y ferretería,
-              con productos confiables y una respuesta comercial clara.
+              En REXCON buscamos que cada producto tenga una razón para estar en nuestro catálogo:
+              rendimiento, durabilidad y valor.
             </p>
-            <Link to="/mayoristas" className="link">Conoce nuestra venta mayorista</Link>
+            <p>
+              Abastecemos a profesionales, empresas y ferreterías con herramientas seleccionadas
+              para el trabajo diario y disponibles en Chile.
+            </p>
+            <Link to="/productos" className="link">Descubre REXCON {"\u2192"}</Link>
           </div>
         </div>
       </section>
