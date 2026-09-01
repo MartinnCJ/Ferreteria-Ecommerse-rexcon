@@ -1,0 +1,221 @@
+import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { userErrorMessage } from "@/lib/errors";
+
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
+function slugify(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+function extensionFor(file: File) {
+  const byType: Record<string, string> = {
+    "image/jpeg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+    "image/avif": "avif",
+  };
+  return byType[file.type] ?? "jpg";
+}
+
+export function ProductCreateForm() {
+  const queryClient = useQueryClient();
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [price, setPrice] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(
+    null,
+  );
+
+  function chooseImage(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0] ?? null;
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setFeedback(null);
+    if (!file) {
+      setImageFile(null);
+      setPreviewUrl(null);
+      return;
+    }
+    if (!ACCEPTED_IMAGE_TYPES.includes(file.type) || file.size > MAX_IMAGE_BYTES) {
+      setImageFile(null);
+      setPreviewUrl(null);
+      event.target.value = "";
+      setFeedback({
+        type: "error",
+        message: "Usa una imagen JPG, PNG, WebP o AVIF de hasta 5 MB.",
+      });
+      return;
+    }
+    setImageFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
+  }
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setFeedback(null);
+    const numericPrice = Number(price);
+    if (
+      !name.trim() ||
+      !description.trim() ||
+      !imageFile ||
+      !Number.isFinite(numericPrice) ||
+      numericPrice <= 0
+    ) {
+      setFeedback({
+        type: "error",
+        message: "Completa todos los campos con un precio mayor que cero.",
+      });
+      return;
+    }
+
+    setSubmitting(true);
+    let storagePath: string | null = null;
+    let productId: string | null = null;
+    try {
+      const unique = crypto.randomUUID();
+      const slug = `${slugify(name) || "producto"}-${unique.slice(0, 8)}`;
+      const sku = `REX-${unique.slice(0, 8).toUpperCase()}`;
+      storagePath = `${new Date().getUTCFullYear()}/${unique}.${extensionFor(imageFile)}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("productos")
+        .upload(storagePath, imageFile, {
+          cacheControl: "31536000",
+          contentType: imageFile.type,
+          upsert: false,
+        });
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrlData } = supabase.storage.from("productos").getPublicUrl(storagePath);
+      const { data: product, error: productError } = await supabase
+        .from("products")
+        .insert({
+          name: name.trim(),
+          description: description.trim(),
+          short_description: description.trim().slice(0, 180),
+          retail_price: numericPrice,
+          sku,
+          slug,
+          brand: "REXCON",
+          status: "active",
+        })
+        .select("id")
+        .single();
+      if (productError) throw productError;
+      productId = product.id;
+
+      const { error: imageError } = await supabase.from("product_images").insert({
+        product_id: product.id,
+        image_url: publicUrlData.publicUrl,
+        alt_text: name.trim(),
+        is_primary: true,
+      });
+      if (imageError) throw imageError;
+
+      setName("");
+      setDescription("");
+      setPrice("");
+      setImageFile(null);
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(null);
+      if (imageInputRef.current) imageInputRef.current.value = "";
+      setFeedback({ type: "success", message: "Producto publicado correctamente." });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["catalog"] }),
+        queryClient.invalidateQueries({ queryKey: ["admin-inventory"] }),
+      ]);
+    } catch (error) {
+      if (productId) await supabase.from("products").delete().eq("id", productId);
+      if (storagePath) await supabase.storage.from("productos").remove([storagePath]);
+      setFeedback({
+        type: "error",
+        message: userErrorMessage(error, "No pudimos crear el producto."),
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <section className="admin-card product-create-card" aria-labelledby="new-product-title">
+      <div className="card-title">
+        <div>
+          <h2 id="new-product-title">Nuevo producto</h2>
+          <p>Publica una ficha con imagen, descripción y precio de venta.</p>
+        </div>
+      </div>
+      <form className="product-create-form" onSubmit={submit}>
+        <div className="product-image-field">
+          <label htmlFor="product-image">Imagen del producto</label>
+          <input
+            ref={imageInputRef}
+            id="product-image"
+            name="image"
+            type="file"
+            accept={ACCEPTED_IMAGE_TYPES.join(",")}
+            onChange={chooseImage}
+            disabled={submitting}
+            required
+          />
+          <small>JPG, PNG, WebP o AVIF · máximo 5 MB.</small>
+          {previewUrl && <img src={previewUrl} alt="Vista previa del producto" />}
+        </div>
+        <div className="product-fields">
+          <label>
+            Nombre
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              maxLength={140}
+              disabled={submitting}
+              required
+            />
+          </label>
+          <label>
+            Descripción
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={5}
+              maxLength={4000}
+              disabled={submitting}
+              required
+            />
+          </label>
+          <label>
+            Precio (CLP)
+            <input
+              type="number"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              min="1"
+              step="1"
+              inputMode="numeric"
+              disabled={submitting}
+              required
+            />
+          </label>
+          {feedback && (
+            <div className={`form-feedback ${feedback.type}`} role="status">
+              {feedback.message}
+            </div>
+          )}
+          <button className="btn primary" type="submit" disabled={submitting}>
+            {submitting ? "Publicando…" : "Publicar producto"}
+          </button>
+        </div>
+      </form>
+    </section>
+  );
+}

@@ -27,6 +27,7 @@ export interface Profile {
   b2b_review_note: string | null;
   b2b_reviewed_at: string | null;
   b2b_reviewed_by: string | null;
+  is_admin?: boolean;
 }
 
 export interface PublicProduct {

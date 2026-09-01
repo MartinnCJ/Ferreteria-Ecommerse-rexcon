@@ -513,6 +513,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          is_admin: boolean
           b2b_review_note: string | null
           b2b_reviewed_at: string | null
           b2b_reviewed_by: string | null
@@ -530,6 +531,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          is_admin?: boolean
           b2b_review_note?: string | null
           b2b_reviewed_at?: string | null
           b2b_reviewed_by?: string | null
@@ -547,6 +549,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          is_admin?: boolean
           b2b_review_note?: string | null
           b2b_reviewed_at?: string | null
           b2b_reviewed_by?: string | null
