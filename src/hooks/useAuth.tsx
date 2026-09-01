@@ -35,7 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       supabase
         .from("profiles")
         .select(
-          "id, email, first_name, last_name, phone, rut, company_name, company_rut, customer_type, b2b_status, b2b_review_note, b2b_reviewed_at, b2b_reviewed_by, is_admin",
+          "id, email, first_name, last_name, phone, rut, company_name, company_rut, customer_type, b2b_status, b2b_review_note, b2b_reviewed_at, b2b_reviewed_by",
         )
         .eq("id", userId)
         .maybeSingle(),
@@ -50,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       resolvedProfile = repairedProfile as Profile | null;
     }
     setProfile(resolvedProfile);
-    setIsAdmin(Boolean(resolvedProfile?.is_admin || roles?.some((r) => r.role === "admin")));
+    setIsAdmin(Boolean(roles?.some((r) => r.role === "admin")));
   }, []);
 
   useEffect(() => {
