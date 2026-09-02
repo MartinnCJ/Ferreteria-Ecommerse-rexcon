@@ -1,10 +1,32 @@
-import { useState, type FormEvent } from "react";
+import { useState, type ChangeEvent, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { userErrorMessage } from "@/lib/errors";
 import { money } from "@/lib/format";
 
 type ProductStatus = "draft" | "active" | "out_of_stock" | "discontinued";
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
+function imageExtension(file: File) {
+  return (
+    (
+      {
+        "image/jpeg": "jpg",
+        "image/png": "png",
+        "image/webp": "webp",
+        "image/avif": "avif",
+      } as Record<string, string>
+    )[file.type] ?? "jpg"
+  );
+}
+
+function storagePathFromPublicUrl(url: string | null) {
+  if (!url) return null;
+  const marker = "/storage/v1/object/public/productos/";
+  const markerIndex = url.indexOf(marker);
+  return markerIndex < 0 ? null : decodeURIComponent(url.slice(markerIndex + marker.length));
+}
 
 interface AdminProduct {
   id: string;
@@ -28,6 +50,7 @@ export function AdminCatalogManager() {
   const queryClient = useQueryClient();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [replacementImages, setReplacementImages] = useState<Record<string, File | undefined>>({});
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(
     null,
   );
@@ -82,7 +105,10 @@ export function AdminCatalogManager() {
         _category_id: String(form.get("categoryId") ?? "") || null,
       });
       if (error) throw error;
+      const replacementImage = replacementImages[product.id];
+      if (replacementImage) await replaceProductImage(product, replacementImage);
       await refreshCatalog();
+      setReplacementImages((current) => ({ ...current, [product.id]: undefined }));
       setEditingId(null);
       setFeedback({ type: "success", message: "Ficha del producto actualizada." });
     } catch (error) {
@@ -92,6 +118,69 @@ export function AdminCatalogManager() {
       });
     } finally {
       setSavingId(null);
+    }
+  }
+
+  function chooseReplacementImage(event: ChangeEvent<HTMLInputElement>, productId: string) {
+    const file = event.target.files?.[0];
+    setFeedback(null);
+    if (!file) {
+      setReplacementImages((current) => ({ ...current, [productId]: undefined }));
+      return;
+    }
+    if (!ACCEPTED_IMAGE_TYPES.includes(file.type) || file.size > MAX_IMAGE_BYTES) {
+      event.target.value = "";
+      setReplacementImages((current) => ({ ...current, [productId]: undefined }));
+      setFeedback({
+        type: "error",
+        message: "Usa una imagen JPG, PNG, WebP o AVIF de hasta 5 MB.",
+      });
+      return;
+    }
+    setReplacementImages((current) => ({ ...current, [productId]: file }));
+  }
+
+  async function replaceProductImage(product: AdminProduct, file: File) {
+    const storagePath = `${new Date().getUTCFullYear()}/${product.id}-${crypto.randomUUID()}.${imageExtension(file)}`;
+    const { error: uploadError } = await supabase.storage
+      .from("productos")
+      .upload(storagePath, file, {
+        cacheControl: "31536000",
+        contentType: file.type,
+        upsert: false,
+      });
+    if (uploadError) throw uploadError;
+
+    try {
+      const { data: publicUrl } = supabase.storage.from("productos").getPublicUrl(storagePath);
+      const { data: primaryImage, error: findError } = await supabase
+        .from("product_images")
+        .select("id")
+        .eq("product_id", product.id)
+        .eq("is_primary", true)
+        .maybeSingle();
+      if (findError) throw findError;
+
+      const imageValues = {
+        image_url: publicUrl.publicUrl,
+        alt_text: product.name,
+        is_primary: true,
+      };
+      const imageResult = primaryImage
+        ? await supabase.from("product_images").update(imageValues).eq("id", primaryImage.id)
+        : await supabase.from("product_images").insert({
+            ...imageValues,
+            product_id: product.id,
+          });
+      if (imageResult.error) throw imageResult.error;
+
+      const oldStoragePath = storagePathFromPublicUrl(product.image_url);
+      if (oldStoragePath && oldStoragePath !== storagePath) {
+        await supabase.storage.from("productos").remove([oldStoragePath]);
+      }
+    } catch (error) {
+      await supabase.storage.from("productos").remove([storagePath]);
+      throw error;
     }
   }
 
@@ -315,6 +404,19 @@ export function AdminCatalogManager() {
                       maxLength={4000}
                       defaultValue={product.description ?? ""}
                     />
+                  </label>
+                  <label className="catalog-image-replacement">
+                    Cambiar imagen
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/avif"
+                      onChange={(event) => chooseReplacementImage(event, product.id)}
+                    />
+                    <small>
+                      {replacementImages[product.id]
+                        ? `Nueva imagen: ${replacementImages[product.id]?.name}`
+                        : "Opcional. JPG, PNG, WebP o AVIF de hasta 5 MB."}
+                    </small>
                   </label>
                   <div className="catalog-edit-actions">
                     {product.status !== "discontinued" && (
