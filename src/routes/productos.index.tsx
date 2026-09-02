@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { z } from "zod";
@@ -20,8 +20,7 @@ export const Route = createFileRoute("/productos/")({
       { title: `Catálogo de herramientas | ${BRAND.name}` },
       {
         name: "description",
-        content:
-          `Explora el catálogo completo de herramientas eléctricas, manuales, medición y seguridad ${BRAND.name} con stock en Chile.`,
+        content: `Explora el catálogo completo de herramientas eléctricas, manuales, medición y seguridad ${BRAND.name} con stock en Chile.`,
       },
       { property: "og:title", content: `Catálogo de herramientas | ${BRAND.name}` },
       {
@@ -41,6 +40,17 @@ function CatalogPage() {
   const navigate = Route.useNavigate();
   const { data } = useSuspenseQuery(catalogQueryOptions());
   const [sort, setSort] = useState<"relevancia" | "precio-asc" | "precio-desc">("relevancia");
+  const [catalogView, setCatalogView] = useState<"large" | "compact">("compact");
+
+  useEffect(() => {
+    const savedView = localStorage.getItem("rexcon:catalog-view");
+    if (savedView === "large" || savedView === "compact") setCatalogView(savedView);
+  }, []);
+
+  function changeCatalogView(view: "large" | "compact") {
+    setCatalogView(view);
+    localStorage.setItem("rexcon:catalog-view", view);
+  }
 
   const filtered = useMemo(() => {
     const term = (search.q ?? "").trim().toLowerCase();
@@ -52,7 +62,8 @@ function CatalogPage() {
       : null;
 
     let list = data.products.filter((product) => {
-      const matchesCategory = !categoryIds || (product.category_id ? categoryIds.has(product.category_id) : false);
+      const matchesCategory =
+        !categoryIds || (product.category_id ? categoryIds.has(product.category_id) : false);
       const matchesTerm =
         !term ||
         product.name.toLowerCase().includes(term) ||
@@ -96,6 +107,28 @@ function CatalogPage() {
             <option value="precio-asc">Menor precio</option>
             <option value="precio-desc">Mayor precio</option>
           </select>
+          <div className="catalog-view-toggle" aria-label="Tamaño de las tarjetas">
+            <button
+              type="button"
+              className={catalogView === "large" ? "active" : ""}
+              aria-label="Mostrar un producto por fila"
+              aria-pressed={catalogView === "large"}
+              title="Vista grande"
+              onClick={() => changeCatalogView("large")}
+            >
+              ☰
+            </button>
+            <button
+              type="button"
+              className={catalogView === "compact" ? "active" : ""}
+              aria-label="Mostrar cuatro productos por fila"
+              aria-pressed={catalogView === "compact"}
+              title="Vista de 4 columnas"
+              onClick={() => changeCatalogView("compact")}
+            >
+              ▦
+            </button>
+          </div>
         </div>
       </header>
 
@@ -130,7 +163,7 @@ function CatalogPage() {
           <p>No encontramos productos con esos filtros.</p>
         </div>
       ) : (
-        <div className="grid products">
+        <div className={`products products-${catalogView}`}>
           {filtered.map((product) => (
             <ProductCard
               key={product.id}

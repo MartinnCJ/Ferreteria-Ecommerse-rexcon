@@ -36,6 +36,8 @@ interface AdminProduct {
   retail_price: number;
   status: ProductStatus;
   physical_stock: number;
+  blister_stock: number;
+  master_box_stock: number;
   reserved_stock: number;
   available_stock: number;
   minimum_stock: number;
@@ -190,9 +192,12 @@ export function AdminCatalogManager() {
     setSavingId(product.id);
     setFeedback(null);
     try {
-      const { error } = await supabase.rpc("admin_set_product_stock", {
+      const blisterStock = Number(form.get("blisterStock"));
+      const masterBoxStock = Number(form.get("masterBoxStock"));
+      const { error } = await supabase.rpc("admin_set_product_packaging_stock", {
         _product_id: product.id,
-        _physical_stock: Number(form.get("stock")),
+        _blister_stock: blisterStock,
+        _master_box_stock: masterBoxStock,
         _note: "Ajuste desde el panel de catálogo",
       });
       if (error) throw error;
@@ -303,17 +308,28 @@ export function AdminCatalogManager() {
               </div>
               <form className="stock-editor" onSubmit={(event) => void saveStock(event, product)}>
                 <label>
-                  Stock físico
+                  Stock blíster/simple
                   <input
-                    name="stock"
+                    name="blisterStock"
                     type="number"
-                    min={product.reserved_stock}
-                    defaultValue={product.physical_stock}
+                    min="0"
+                    defaultValue={product.blister_stock}
+                    required
+                  />
+                </label>
+                <label>
+                  Stock caja máster
+                  <input
+                    name="masterBoxStock"
+                    type="number"
+                    min="0"
+                    defaultValue={product.master_box_stock}
                     required
                   />
                 </label>
                 <small>
-                  {product.reserved_stock} reservadas · mínimo {product.minimum_stock}
+                  Total {product.physical_stock} · {product.reserved_stock} reservadas · mínimo{" "}
+                  {product.minimum_stock}
                 </small>
                 <button className="mini-action approve" disabled={savingId === product.id}>
                   Guardar stock

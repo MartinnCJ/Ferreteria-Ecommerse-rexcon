@@ -411,6 +411,7 @@ export type Database = {
         Row: {
           accent: string | null
           available_stock: number | null
+          blister_stock: number
           blister_simple_units: number | null
           brand: string
           category_id: string | null
@@ -424,6 +425,7 @@ export type Database = {
           id: string
           length: number | null
           master_box_units: number | null
+          master_box_stock: number
           minimum_stock: number
           name: string
           physical_stock: number
@@ -444,6 +446,7 @@ export type Database = {
         Insert: {
           accent?: string | null
           available_stock?: number | null
+          blister_stock?: number
           blister_simple_units?: number | null
           brand?: string
           category_id?: string | null
@@ -457,6 +460,7 @@ export type Database = {
           id?: string
           length?: number | null
           master_box_units?: number | null
+          master_box_stock?: number
           minimum_stock?: number
           name: string
           physical_stock?: number
@@ -477,6 +481,7 @@ export type Database = {
         Update: {
           accent?: string | null
           available_stock?: number | null
+          blister_stock?: number
           blister_simple_units?: number | null
           brand?: string
           category_id?: string | null
@@ -490,6 +495,7 @@ export type Database = {
           id?: string
           length?: number | null
           master_box_units?: number | null
+          master_box_stock?: number
           minimum_stock?: number
           name?: string
           physical_stock?: number
@@ -862,6 +868,7 @@ export type Database = {
         Args: { _items: Json }
         Returns: {
           available_stock: number
+          blister_stock: number
           base_price: number
           discount_percentage: number
           product_id: string
@@ -903,6 +910,7 @@ export type Database = {
           id: string
           image_url: string | null
           master_box_units: number | null
+          master_box_stock: number
           minimum_stock: number
           name: string
           physical_stock: number
@@ -916,6 +924,15 @@ export type Database = {
         Args: {
           _note?: string | null
           _physical_stock: number
+          _product_id: string
+        }
+        Returns: undefined
+      }
+      admin_set_product_packaging_stock: {
+        Args: {
+          _blister_stock: number
+          _master_box_stock: number
+          _note?: string | null
           _product_id: string
         }
         Returns: undefined
