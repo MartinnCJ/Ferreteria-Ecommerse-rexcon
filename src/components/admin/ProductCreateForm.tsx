@@ -184,8 +184,8 @@ export function ProductCreateForm() {
     event.preventDefault();
     setFeedback(null);
     const numericPrice = Number(price);
-    const numericBlister = blisterSimple ? Number(blisterSimple) : null;
-    const numericMasterBox = masterBox ? Number(masterBox) : null;
+    const numericBlister = blisterSimple ? Number(blisterSimple) : 0;
+    const numericMasterBox = masterBox ? Number(masterBox) : 0;
     if (
       !productCode.trim() ||
       !name.trim() ||
@@ -209,12 +209,14 @@ export function ProductCreateForm() {
       return;
     }
     if (
-      (numericBlister !== null && (!Number.isInteger(numericBlister) || numericBlister <= 0)) ||
-      (numericMasterBox !== null && (!Number.isInteger(numericMasterBox) || numericMasterBox <= 0))
+      !Number.isInteger(numericBlister) ||
+      numericBlister < 0 ||
+      !Number.isInteger(numericMasterBox) ||
+      numericMasterBox < 0
     ) {
       setFeedback({
         type: "error",
-        message: "Los formatos de empaque deben ser números enteros mayores que cero.",
+        message: "Los valores de stock deben ser números enteros iguales o mayores que cero.",
       });
       return;
     }
@@ -249,8 +251,8 @@ export function ProductCreateForm() {
           slug,
           brand: "REXCON",
           status: "active",
-          blister_simple_units: numericBlister,
-          master_box_units: numericMasterBox,
+          blister_stock: numericBlister,
+          master_box_stock: numericMasterBox,
           category_id: categoryId || null,
         })
         .select("id")
@@ -371,28 +373,28 @@ export function ProductCreateForm() {
           </label>
           <div className="packaging-fields">
             <label>
-              Blíster simple (unidades)
+              Stock blíster/simple
               <input
                 type="number"
                 value={blisterSimple}
                 onChange={(event) => setBlisterSimple(event.target.value)}
-                min="1"
+                min="0"
                 step="1"
                 inputMode="numeric"
-                placeholder="Ej. 10"
+                placeholder="Ej. 40"
                 disabled={submitting}
               />
             </label>
             <label>
-              Caja máster (unidades)
+              Stock caja máster
               <input
                 type="number"
                 value={masterBox}
                 onChange={(event) => setMasterBox(event.target.value)}
-                min="1"
+                min="0"
                 step="1"
                 inputMode="numeric"
-                placeholder="Ej. 200"
+                placeholder="Ej. 80"
                 disabled={submitting}
               />
             </label>

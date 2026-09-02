@@ -102,8 +102,6 @@ export function AdminCatalogManager() {
         _retail_price: Number(form.get("price")),
         _status: String(form.get("status")) as ProductStatus,
         _minimum_stock: Number(form.get("minimumStock")),
-        _blister_simple_units: form.get("blisterSimple") ? Number(form.get("blisterSimple")) : null,
-        _master_box_units: form.get("masterBox") ? Number(form.get("masterBox")) : null,
         _category_id: String(form.get("categoryId") ?? "") || null,
       });
       if (error) throw error;
@@ -313,7 +311,7 @@ export function AdminCatalogManager() {
                     name="blisterStock"
                     type="number"
                     min="0"
-                    defaultValue={product.blister_stock}
+                    defaultValue={product.blister_stock ?? product.blister_simple_units ?? 0}
                     required
                   />
                 </label>
@@ -323,7 +321,7 @@ export function AdminCatalogManager() {
                     name="masterBoxStock"
                     type="number"
                     min="0"
-                    defaultValue={product.master_box_stock}
+                    defaultValue={product.master_box_stock ?? product.master_box_units ?? 0}
                     required
                   />
                 </label>
@@ -379,28 +377,6 @@ export function AdminCatalogManager() {
                       step="1"
                       defaultValue={product.minimum_stock}
                       required
-                    />
-                  </label>
-                  <label>
-                    Blíster simple
-                    <input
-                      name="blisterSimple"
-                      type="number"
-                      min="1"
-                      step="1"
-                      defaultValue={product.blister_simple_units ?? ""}
-                      placeholder="Unidades"
-                    />
-                  </label>
-                  <label>
-                    Caja máster
-                    <input
-                      name="masterBox"
-                      type="number"
-                      min="1"
-                      step="1"
-                      defaultValue={product.master_box_units ?? ""}
-                      placeholder="Unidades"
                     />
                   </label>
                   <label>
