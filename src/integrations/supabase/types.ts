@@ -411,6 +411,7 @@ export type Database = {
         Row: {
           accent: string | null
           available_stock: number | null
+          blister_simple_units: number | null
           brand: string
           category_id: string | null
           cost: number | null
@@ -422,6 +423,7 @@ export type Database = {
           icon: string | null
           id: string
           length: number | null
+          master_box_units: number | null
           minimum_stock: number
           name: string
           physical_stock: number
@@ -442,6 +444,7 @@ export type Database = {
         Insert: {
           accent?: string | null
           available_stock?: number | null
+          blister_simple_units?: number | null
           brand?: string
           category_id?: string | null
           cost?: number | null
@@ -453,6 +456,7 @@ export type Database = {
           icon?: string | null
           id?: string
           length?: number | null
+          master_box_units?: number | null
           minimum_stock?: number
           name: string
           physical_stock?: number
@@ -473,6 +477,7 @@ export type Database = {
         Update: {
           accent?: string | null
           available_stock?: number | null
+          blister_simple_units?: number | null
           brand?: string
           category_id?: string | null
           cost?: number | null
@@ -484,6 +489,7 @@ export type Database = {
           icon?: string | null
           id?: string
           length?: number | null
+          master_box_units?: number | null
           minimum_stock?: number
           name?: string
           physical_stock?: number
@@ -785,6 +791,7 @@ export type Database = {
         Row: {
           accent: string | null
           available_stock: number | null
+          blister_simple_units: number | null
           brand: string | null
           category_id: string | null
           category_name: string | null
@@ -796,6 +803,7 @@ export type Database = {
           icon: string | null
           id: string | null
           length: number | null
+          master_box_units: number | null
           name: string | null
           retail_price: number | null
           short_description: string | null
@@ -880,9 +888,11 @@ export type Database = {
         Args: never
         Returns: {
           available_stock: number
+          blister_simple_units: number | null
           description: string | null
           id: string
           image_url: string | null
+          master_box_units: number | null
           minimum_stock: number
           name: string
           physical_stock: number
@@ -898,7 +908,9 @@ export type Database = {
       }
       admin_update_product: {
         Args: {
+          _blister_simple_units?: number | null
           _description: string
+          _master_box_units?: number | null
           _minimum_stock: number
           _name: string
           _product_id: string

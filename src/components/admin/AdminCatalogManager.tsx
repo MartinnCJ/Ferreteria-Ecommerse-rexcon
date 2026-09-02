@@ -18,6 +18,8 @@ interface AdminProduct {
   available_stock: number;
   minimum_stock: number;
   image_url: string | null;
+  blister_simple_units: number | null;
+  master_box_units: number | null;
 }
 
 export function AdminCatalogManager() {
@@ -57,6 +59,8 @@ export function AdminCatalogManager() {
         _retail_price: Number(form.get("price")),
         _status: String(form.get("status")) as ProductStatus,
         _minimum_stock: Number(form.get("minimumStock")),
+        _blister_simple_units: form.get("blisterSimple") ? Number(form.get("blisterSimple")) : null,
+        _master_box_units: form.get("masterBox") ? Number(form.get("masterBox")) : null,
       });
       if (error) throw error;
       await refreshCatalog();
@@ -189,6 +193,28 @@ export function AdminCatalogManager() {
                     step="1"
                     defaultValue={product.minimum_stock}
                     required
+                  />
+                </label>
+                <label>
+                  Blíster simple
+                  <input
+                    name="blisterSimple"
+                    type="number"
+                    min="1"
+                    step="1"
+                    defaultValue={product.blister_simple_units ?? ""}
+                    placeholder="Unidades"
+                  />
+                </label>
+                <label>
+                  Caja máster
+                  <input
+                    name="masterBox"
+                    type="number"
+                    min="1"
+                    step="1"
+                    defaultValue={product.master_box_units ?? ""}
+                    placeholder="Unidades"
                   />
                 </label>
                 <label>

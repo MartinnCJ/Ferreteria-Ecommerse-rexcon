@@ -49,6 +49,8 @@ export interface PublicProduct {
   retail_price: number;
   available_stock: number;
   warranty_months: number | null;
+  blister_simple_units: number | null;
+  master_box_units: number | null;
   image_url: string | null;
   image_alt: string | null;
 }

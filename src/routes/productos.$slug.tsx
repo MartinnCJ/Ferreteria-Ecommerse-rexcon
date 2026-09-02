@@ -98,6 +98,16 @@ function ProductDetail() {
             <p className="detail-description">
               {product.description ?? product.short_description ?? `Herramienta profesional ${BRAND.name}.`}
             </p>
+            {(product.blister_simple_units || product.master_box_units) && (
+              <div className="packaging-info" aria-label="Formatos de empaque">
+                {product.blister_simple_units && (
+                  <span><b>Blíster simple</b>{product.blister_simple_units} unidades</span>
+                )}
+                {product.master_box_units && (
+                  <span><b>Caja máster</b>{product.master_box_units} unidades</span>
+                )}
+              </div>
+            )}
 
             {specifications.length > 0 && (
               <ul className="spec-list">

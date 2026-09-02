@@ -10,7 +10,13 @@ const DRAFT_DATABASE = "rexcon-admin-drafts";
 const IMAGE_STORE = "images";
 const IMAGE_DRAFT_KEY = "new-product";
 
-type TextDraft = { name: string; description: string; price: string };
+type TextDraft = {
+  name: string;
+  description: string;
+  price: string;
+  blisterSimple: string;
+  masterBox: string;
+};
 
 function openDraftDatabase() {
   return new Promise<IDBDatabase>((resolve, reject) => {
@@ -73,6 +79,8 @@ export function ProductCreateForm() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
+  const [blisterSimple, setBlisterSimple] = useState("");
+  const [masterBox, setMasterBox] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [draftRestored, setDraftRestored] = useState(false);
@@ -89,6 +97,8 @@ export function ProductCreateForm() {
         setName(typeof draft.name === "string" ? draft.name : "");
         setDescription(typeof draft.description === "string" ? draft.description : "");
         setPrice(typeof draft.price === "string" ? draft.price : "");
+        setBlisterSimple(typeof draft.blisterSimple === "string" ? draft.blisterSimple : "");
+        setMasterBox(typeof draft.masterBox === "string" ? draft.masterBox : "");
       }
     } catch {
       localStorage.removeItem(TEXT_DRAFT_KEY);
@@ -101,10 +111,11 @@ export function ProductCreateForm() {
 
   useEffect(() => {
     if (!draftRestored) return;
-    const draft: TextDraft = { name, description, price };
-    if (name || description || price) localStorage.setItem(TEXT_DRAFT_KEY, JSON.stringify(draft));
+    const draft: TextDraft = { name, description, price, blisterSimple, masterBox };
+    if (name || description || price || blisterSimple || masterBox)
+      localStorage.setItem(TEXT_DRAFT_KEY, JSON.stringify(draft));
     else localStorage.removeItem(TEXT_DRAFT_KEY);
-  }, [description, draftRestored, name, price]);
+  }, [blisterSimple, description, draftRestored, masterBox, name, price]);
 
   useEffect(() => {
     if (!draftRestored) return;
@@ -146,6 +157,8 @@ export function ProductCreateForm() {
     event.preventDefault();
     setFeedback(null);
     const numericPrice = Number(price);
+    const numericBlister = blisterSimple ? Number(blisterSimple) : null;
+    const numericMasterBox = masterBox ? Number(masterBox) : null;
     if (
       !name.trim() ||
       !description.trim() ||
@@ -156,6 +169,16 @@ export function ProductCreateForm() {
       setFeedback({
         type: "error",
         message: "Completa todos los campos con un precio mayor que cero.",
+      });
+      return;
+    }
+    if (
+      (numericBlister !== null && (!Number.isInteger(numericBlister) || numericBlister <= 0)) ||
+      (numericMasterBox !== null && (!Number.isInteger(numericMasterBox) || numericMasterBox <= 0))
+    ) {
+      setFeedback({
+        type: "error",
+        message: "Los formatos de empaque deben ser números enteros mayores que cero.",
       });
       return;
     }
@@ -190,6 +213,8 @@ export function ProductCreateForm() {
           slug,
           brand: "REXCON",
           status: "active",
+          blister_simple_units: numericBlister,
+          master_box_units: numericMasterBox,
         })
         .select("id")
         .single();
@@ -207,6 +232,8 @@ export function ProductCreateForm() {
       setName("");
       setDescription("");
       setPrice("");
+      setBlisterSimple("");
+      setMasterBox("");
       setImageFile(null);
       localStorage.removeItem(TEXT_DRAFT_KEY);
       await writeDraftImage(null).catch(() => undefined);
@@ -274,6 +301,34 @@ export function ProductCreateForm() {
               required
             />
           </label>
+          <div className="packaging-fields">
+            <label>
+              Blíster simple (unidades)
+              <input
+                type="number"
+                value={blisterSimple}
+                onChange={(event) => setBlisterSimple(event.target.value)}
+                min="1"
+                step="1"
+                inputMode="numeric"
+                placeholder="Ej. 10"
+                disabled={submitting}
+              />
+            </label>
+            <label>
+              Caja máster (unidades)
+              <input
+                type="number"
+                value={masterBox}
+                onChange={(event) => setMasterBox(event.target.value)}
+                min="1"
+                step="1"
+                inputMode="numeric"
+                placeholder="Ej. 200"
+                disabled={submitting}
+              />
+            </label>
+          </div>
           <label>
             Precio (CLP)
             <input

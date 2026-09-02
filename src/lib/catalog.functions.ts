@@ -35,6 +35,7 @@ type CatalogProductRow = Pick<
   | "id" | "sku" | "slug" | "name" | "short_name" | "short_description" | "description"
   | "category_id" | "category_name" | "category_slug" | "brand" | "status" | "featured"
   | "icon" | "accent" | "retail_price" | "available_stock" | "warranty_months"
+  | "blister_simple_units" | "master_box_units"
 >;
 
 type CatalogCategoryRow = Pick<
@@ -68,6 +69,8 @@ function normalizeProduct(
     retail_price: row.retail_price,
     available_stock: Math.max(0, row.available_stock ?? 0),
     warranty_months: row.warranty_months,
+    blister_simple_units: row.blister_simple_units,
+    master_box_units: row.master_box_units,
     image_url: image?.image_url ?? null,
     image_alt: image?.image_alt ?? null,
   };
@@ -84,7 +87,7 @@ export const listCatalog = createServerFn({ method: "GET" }).handler(async () =>
     supabase
       .from("products_public")
       .select(
-        "id, sku, slug, name, short_name, short_description, description, category_id, category_name, category_slug, brand, status, featured, icon, accent, retail_price, available_stock, warranty_months",
+        "id, sku, slug, name, short_name, short_description, description, category_id, category_name, category_slug, brand, status, featured, icon, accent, retail_price, available_stock, warranty_months, blister_simple_units, master_box_units",
       )
       .order("featured", { ascending: false })
       .order("name"),
@@ -128,7 +131,7 @@ export const getProductBySlug = createServerFn({ method: "GET" })
     const { data: product, error } = await supabase
       .from("products_public")
       .select(
-        "id, sku, slug, name, short_name, short_description, description, category_id, category_name, category_slug, brand, status, featured, icon, accent, retail_price, available_stock, warranty_months",
+        "id, sku, slug, name, short_name, short_description, description, category_id, category_name, category_slug, brand, status, featured, icon, accent, retail_price, available_stock, warranty_months, blister_simple_units, master_box_units",
       )
       .eq("slug", data.slug)
       .maybeSingle();

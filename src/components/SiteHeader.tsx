@@ -1,6 +1,6 @@
 import { useEffect, useState, type MouseEvent } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Moon, Sun } from "lucide-react";
+import { LogOut, Moon, Sun } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/hooks/useCart";
 import { useToast } from "@/hooks/useToast";
@@ -11,6 +11,7 @@ import { userErrorMessage } from "@/lib/errors";
 export function SiteHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const { user, profile, isAdmin, signOut } = useAuth();
   const cart = useCart();
   const notify = useToast();
@@ -31,6 +32,8 @@ export function SiteHeader() {
   }, [darkMode]);
 
   async function handleSignOut() {
+    if (signingOut) return;
+    setSigningOut(true);
     try {
       await signOut();
       setMobileMenuOpen(false);
@@ -38,6 +41,8 @@ export function SiteHeader() {
       void navigate({ to: "/", replace: true });
     } catch (error) {
       notify(userErrorMessage(error, "No pudimos cerrar la sesión."));
+    } finally {
+      setSigningOut(false);
     }
   }
 
@@ -95,6 +100,19 @@ export function SiteHeader() {
               <Link to="/auth" className="btn ghost desktop-only">
                 Ingresar
               </Link>
+            )}
+            {isAdmin && (
+              <button
+                className="admin-signout desktop-only"
+                type="button"
+                onClick={() => void handleSignOut()}
+                disabled={signingOut}
+                aria-label="Cerrar sesión de administrador"
+                title="Cerrar sesión"
+              >
+                <LogOut size={17} aria-hidden="true" />
+                <span>{signingOut ? "Saliendo…" : "Salir"}</span>
+              </button>
             )}
             <button
               className="theme-toggle"
