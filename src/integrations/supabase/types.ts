@@ -831,6 +831,10 @@ export type Database = {
         Args: { _product_id: string }
         Returns: undefined
       }
+      admin_restore_product: {
+        Args: { _product_id: string }
+        Returns: undefined
+      }
       effective_price_tier: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["customer_type"]
