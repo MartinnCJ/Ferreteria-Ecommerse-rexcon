@@ -1,10 +1,52 @@
-import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { userErrorMessage } from "@/lib/errors";
 
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const TEXT_DRAFT_KEY = "rexcon:admin:product-draft";
+const DRAFT_DATABASE = "rexcon-admin-drafts";
+const IMAGE_STORE = "images";
+const IMAGE_DRAFT_KEY = "new-product";
+
+type TextDraft = { name: string; description: string; price: string };
+
+function openDraftDatabase() {
+  return new Promise<IDBDatabase>((resolve, reject) => {
+    const request = indexedDB.open(DRAFT_DATABASE, 1);
+    request.onupgradeneeded = () => {
+      if (!request.result.objectStoreNames.contains(IMAGE_STORE)) {
+        request.result.createObjectStore(IMAGE_STORE);
+      }
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function readDraftImage() {
+  const database = await openDraftDatabase();
+  return new Promise<File | null>((resolve, reject) => {
+    const transaction = database.transaction(IMAGE_STORE);
+    const request = transaction.objectStore(IMAGE_STORE).get(IMAGE_DRAFT_KEY);
+    request.onsuccess = () => resolve(request.result instanceof File ? request.result : null);
+    request.onerror = () => reject(request.error);
+    transaction.oncomplete = () => database.close();
+  });
+}
+
+async function writeDraftImage(file: File | null) {
+  const database = await openDraftDatabase();
+  await new Promise<void>((resolve, reject) => {
+    const transaction = database.transaction(IMAGE_STORE, "readwrite");
+    if (file) transaction.objectStore(IMAGE_STORE).put(file, IMAGE_DRAFT_KEY);
+    else transaction.objectStore(IMAGE_STORE).delete(IMAGE_DRAFT_KEY);
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => reject(transaction.error);
+  });
+  database.close();
+}
 
 function slugify(value: string) {
   return value
@@ -33,23 +75,63 @@ export function ProductCreateForm() {
   const [price, setPrice] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [draftRestored, setDraftRestored] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(
     null,
   );
 
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(TEXT_DRAFT_KEY);
+      if (saved) {
+        const draft = JSON.parse(saved) as Partial<TextDraft>;
+        setName(typeof draft.name === "string" ? draft.name : "");
+        setDescription(typeof draft.description === "string" ? draft.description : "");
+        setPrice(typeof draft.price === "string" ? draft.price : "");
+      }
+    } catch {
+      localStorage.removeItem(TEXT_DRAFT_KEY);
+    }
+    void readDraftImage()
+      .then(setImageFile)
+      .catch(() => undefined)
+      .finally(() => setDraftRestored(true));
+  }, []);
+
+  useEffect(() => {
+    if (!draftRestored) return;
+    const draft: TextDraft = { name, description, price };
+    if (name || description || price) localStorage.setItem(TEXT_DRAFT_KEY, JSON.stringify(draft));
+    else localStorage.removeItem(TEXT_DRAFT_KEY);
+  }, [description, draftRestored, name, price]);
+
+  useEffect(() => {
+    if (!draftRestored) return;
+    void writeDraftImage(imageFile).catch(() => {
+      setFeedback({ type: "error", message: "No pudimos guardar la imagen en el borrador local." });
+    });
+  }, [draftRestored, imageFile]);
+
+  useEffect(() => {
+    if (!imageFile) {
+      setPreviewUrl(null);
+      return;
+    }
+    const objectUrl = URL.createObjectURL(imageFile);
+    setPreviewUrl(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [imageFile]);
+
   function chooseImage(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0] ?? null;
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
     setFeedback(null);
     if (!file) {
       setImageFile(null);
-      setPreviewUrl(null);
       return;
     }
     if (!ACCEPTED_IMAGE_TYPES.includes(file.type) || file.size > MAX_IMAGE_BYTES) {
       setImageFile(null);
-      setPreviewUrl(null);
       event.target.value = "";
       setFeedback({
         type: "error",
@@ -58,7 +140,6 @@ export function ProductCreateForm() {
       return;
     }
     setImageFile(file);
-    setPreviewUrl(URL.createObjectURL(file));
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -127,8 +208,8 @@ export function ProductCreateForm() {
       setDescription("");
       setPrice("");
       setImageFile(null);
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
-      setPreviewUrl(null);
+      localStorage.removeItem(TEXT_DRAFT_KEY);
+      await writeDraftImage(null).catch(() => undefined);
       if (imageInputRef.current) imageInputRef.current.value = "";
       setFeedback({ type: "success", message: "Producto publicado correctamente." });
       await Promise.all([
@@ -166,9 +247,9 @@ export function ProductCreateForm() {
             accept={ACCEPTED_IMAGE_TYPES.join(",")}
             onChange={chooseImage}
             disabled={submitting}
-            required
           />
           <small>JPG, PNG, WebP o AVIF · máximo 5 MB.</small>
+          {imageFile && <small className="draft-saved">Borrador guardado: {imageFile.name}</small>}
           {previewUrl && <img src={previewUrl} alt="Vista previa del producto" />}
         </div>
         <div className="product-fields">

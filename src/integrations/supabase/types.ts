@@ -876,6 +876,37 @@ export type Database = {
         Args: { _approved: boolean; _note?: string | null; _user_id: string }
         Returns: undefined
       }
+      admin_catalog_products: {
+        Args: never
+        Returns: {
+          available_stock: number
+          description: string | null
+          id: string
+          image_url: string | null
+          minimum_stock: number
+          name: string
+          physical_stock: number
+          reserved_stock: number
+          retail_price: number
+          sku: string
+          status: Database["public"]["Enums"]["product_status"]
+        }[]
+      }
+      admin_set_product_stock: {
+        Args: { _note?: string | null; _physical_stock: number; _product_id: string }
+        Returns: undefined
+      }
+      admin_update_product: {
+        Args: {
+          _description: string
+          _minimum_stock: number
+          _name: string
+          _product_id: string
+          _retail_price: number
+          _status: Database["public"]["Enums"]["product_status"]
+        }
+        Returns: undefined
+      }
       admin_inventory: {
         Args: never
         Returns: {

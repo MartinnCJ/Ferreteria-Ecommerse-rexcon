@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/useToast";
 import { money } from "@/lib/format";
 import { userErrorMessage } from "@/lib/errors";
 import { ProductCreateForm } from "@/components/admin/ProductCreateForm";
+import { AdminCatalogManager } from "@/components/admin/AdminCatalogManager";
 import { BRAND, CLIENT_TYPES, type InventoryRow, type OrderSummary, type Profile, type QuoteSummary } from "@/types";
 
 export const Route = createFileRoute("/admin")({
@@ -208,6 +209,7 @@ function AdminPage() {
         </div>
 
         <ProductCreateForm />
+        <AdminCatalogManager />
 
         <div className="admin-grid">
           <div className="admin-card">
