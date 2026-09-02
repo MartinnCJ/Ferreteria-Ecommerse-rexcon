@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { userErrorMessage } from "@/lib/errors";
 
@@ -11,11 +11,13 @@ const IMAGE_STORE = "images";
 const IMAGE_DRAFT_KEY = "new-product";
 
 type TextDraft = {
+  productCode: string;
   name: string;
   description: string;
   price: string;
   blisterSimple: string;
   masterBox: string;
+  categoryId: string;
 };
 
 function openDraftDatabase() {
@@ -77,10 +79,12 @@ export function ProductCreateForm() {
   const queryClient = useQueryClient();
   const imageInputRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState("");
+  const [productCode, setProductCode] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [blisterSimple, setBlisterSimple] = useState("");
   const [masterBox, setMasterBox] = useState("");
+  const [categoryId, setCategoryId] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [draftRestored, setDraftRestored] = useState(false);
@@ -88,6 +92,19 @@ export function ProductCreateForm() {
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(
     null,
   );
+  const categories = useQuery({
+    queryKey: ["catalog-categories"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("categories")
+        .select("id, name")
+        .eq("active", true)
+        .order("sort_order")
+        .order("name");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
 
   useEffect(() => {
     try {
@@ -95,10 +112,12 @@ export function ProductCreateForm() {
       if (saved) {
         const draft = JSON.parse(saved) as Partial<TextDraft>;
         setName(typeof draft.name === "string" ? draft.name : "");
+        setProductCode(typeof draft.productCode === "string" ? draft.productCode : "");
         setDescription(typeof draft.description === "string" ? draft.description : "");
         setPrice(typeof draft.price === "string" ? draft.price : "");
         setBlisterSimple(typeof draft.blisterSimple === "string" ? draft.blisterSimple : "");
         setMasterBox(typeof draft.masterBox === "string" ? draft.masterBox : "");
+        setCategoryId(typeof draft.categoryId === "string" ? draft.categoryId : "");
       }
     } catch {
       localStorage.removeItem(TEXT_DRAFT_KEY);
@@ -111,11 +130,19 @@ export function ProductCreateForm() {
 
   useEffect(() => {
     if (!draftRestored) return;
-    const draft: TextDraft = { name, description, price, blisterSimple, masterBox };
-    if (name || description || price || blisterSimple || masterBox)
+    const draft: TextDraft = {
+      productCode,
+      name,
+      description,
+      price,
+      blisterSimple,
+      masterBox,
+      categoryId,
+    };
+    if (productCode || name || description || price || blisterSimple || masterBox || categoryId)
       localStorage.setItem(TEXT_DRAFT_KEY, JSON.stringify(draft));
     else localStorage.removeItem(TEXT_DRAFT_KEY);
-  }, [blisterSimple, description, draftRestored, masterBox, name, price]);
+  }, [blisterSimple, categoryId, description, draftRestored, masterBox, name, price, productCode]);
 
   useEffect(() => {
     if (!draftRestored) return;
@@ -160,6 +187,7 @@ export function ProductCreateForm() {
     const numericBlister = blisterSimple ? Number(blisterSimple) : null;
     const numericMasterBox = masterBox ? Number(masterBox) : null;
     if (
+      !productCode.trim() ||
       !name.trim() ||
       !description.trim() ||
       !imageFile ||
@@ -169,6 +197,14 @@ export function ProductCreateForm() {
       setFeedback({
         type: "error",
         message: "Completa todos los campos con un precio mayor que cero.",
+      });
+      return;
+    }
+    const normalizedCode = productCode.trim().toUpperCase();
+    if (!/^[A-Z0-9][A-Z0-9._/-]*$/.test(normalizedCode) || normalizedCode.length > 60) {
+      setFeedback({
+        type: "error",
+        message: "El código solo puede usar letras, números, punto, guion, barra y guion bajo.",
       });
       return;
     }
@@ -189,7 +225,7 @@ export function ProductCreateForm() {
     try {
       const unique = crypto.randomUUID();
       const slug = `${slugify(name) || "producto"}-${unique.slice(0, 8)}`;
-      const sku = `REX-${unique.slice(0, 8).toUpperCase()}`;
+      const sku = normalizedCode;
       storagePath = `${new Date().getUTCFullYear()}/${unique}.${extensionFor(imageFile)}`;
 
       const { error: uploadError } = await supabase.storage
@@ -215,6 +251,7 @@ export function ProductCreateForm() {
           status: "active",
           blister_simple_units: numericBlister,
           master_box_units: numericMasterBox,
+          category_id: categoryId || null,
         })
         .select("id")
         .single();
@@ -230,10 +267,12 @@ export function ProductCreateForm() {
       if (imageError) throw imageError;
 
       setName("");
+      setProductCode("");
       setDescription("");
       setPrice("");
       setBlisterSimple("");
       setMasterBox("");
+      setCategoryId("");
       setImageFile(null);
       localStorage.removeItem(TEXT_DRAFT_KEY);
       await writeDraftImage(null).catch(() => undefined);
@@ -280,15 +319,44 @@ export function ProductCreateForm() {
           {previewUrl && <img src={previewUrl} alt="Vista previa del producto" />}
         </div>
         <div className="product-fields">
+          <div className="name-code-fields">
+            <label>
+              Código de producto
+              <input
+                value={productCode}
+                onChange={(event) => setProductCode(event.target.value.toUpperCase())}
+                maxLength={60}
+                placeholder="Ej. DTG040"
+                autoComplete="off"
+                disabled={submitting}
+                required
+              />
+            </label>
+            <label>
+              Nombre
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                maxLength={140}
+                disabled={submitting}
+                required
+              />
+            </label>
+          </div>
           <label>
-            Nombre
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              maxLength={140}
-              disabled={submitting}
-              required
-            />
+            Filtro / categoría
+            <select
+              value={categoryId}
+              onChange={(event) => setCategoryId(event.target.value)}
+              disabled={submitting || categories.isLoading}
+            >
+              <option value="">Sin categoría</option>
+              {categories.data?.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
           </label>
           <label>
             Descripción

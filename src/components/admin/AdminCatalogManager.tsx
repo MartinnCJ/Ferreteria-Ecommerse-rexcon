@@ -20,6 +20,8 @@ interface AdminProduct {
   image_url: string | null;
   blister_simple_units: number | null;
   master_box_units: number | null;
+  category_id: string | null;
+  category_name: string | null;
 }
 
 export function AdminCatalogManager() {
@@ -35,6 +37,19 @@ export function AdminCatalogManager() {
       const { data, error } = await supabase.rpc("admin_catalog_products");
       if (error) throw error;
       return (data ?? []) as AdminProduct[];
+    },
+  });
+  const categories = useQuery({
+    queryKey: ["catalog-categories"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("categories")
+        .select("id, name")
+        .eq("active", true)
+        .order("sort_order")
+        .order("name");
+      if (error) throw error;
+      return data ?? [];
     },
   });
 
@@ -54,6 +69,9 @@ export function AdminCatalogManager() {
     try {
       const { error } = await supabase.rpc("admin_update_product", {
         _product_id: product.id,
+        _sku: String(form.get("sku") ?? "")
+          .trim()
+          .toUpperCase(),
         _name: String(form.get("name") ?? ""),
         _description: String(form.get("description") ?? ""),
         _retail_price: Number(form.get("price")),
@@ -61,6 +79,7 @@ export function AdminCatalogManager() {
         _minimum_stock: Number(form.get("minimumStock")),
         _blister_simple_units: form.get("blisterSimple") ? Number(form.get("blisterSimple")) : null,
         _master_box_units: form.get("masterBox") ? Number(form.get("masterBox")) : null,
+        _category_id: String(form.get("categoryId") ?? "") || null,
       });
       if (error) throw error;
       await refreshCatalog();
@@ -94,6 +113,29 @@ export function AdminCatalogManager() {
       setFeedback({
         type: "error",
         message: userErrorMessage(error, "No pudimos actualizar el stock."),
+      });
+    } finally {
+      setSavingId(null);
+    }
+  }
+
+  async function archiveProduct(product: AdminProduct) {
+    const confirmed = window.confirm(
+      `¿Estás seguro de esto?\n\n${product.name} se eliminará del catálogo público. El historial de ventas se conservará.`,
+    );
+    if (!confirmed) return;
+    setSavingId(product.id);
+    setFeedback(null);
+    try {
+      const { error } = await supabase.rpc("admin_archive_product", { _product_id: product.id });
+      if (error) throw error;
+      await refreshCatalog();
+      setEditingId(null);
+      setFeedback({ type: "success", message: `${product.name} fue retirado del catálogo.` });
+    } catch (error) {
+      setFeedback({
+        type: "error",
+        message: userErrorMessage(error, "No pudimos retirar el producto del catálogo."),
       });
     } finally {
       setSavingId(null);
@@ -170,8 +212,23 @@ export function AdminCatalogManager() {
                 onSubmit={(event) => void saveProduct(event, product)}
               >
                 <label>
+                  Código de producto
+                  <input name="sku" defaultValue={product.sku} maxLength={60} required />
+                </label>
+                <label>
                   Nombre
                   <input name="name" defaultValue={product.name} maxLength={140} required />
+                </label>
+                <label>
+                  Filtro / categoría
+                  <select name="categoryId" defaultValue={product.category_id ?? ""}>
+                    <option value="">Sin categoría</option>
+                    {categories.data?.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
                 </label>
                 <label>
                   Precio CLP
@@ -236,6 +293,16 @@ export function AdminCatalogManager() {
                   />
                 </label>
                 <div className="catalog-edit-actions">
+                  {product.status !== "discontinued" && (
+                    <button
+                      className="btn danger"
+                      type="button"
+                      disabled={savingId === product.id}
+                      onClick={() => void archiveProduct(product)}
+                    >
+                      Eliminar del catálogo
+                    </button>
+                  )}
                   <button className="btn primary" disabled={savingId === product.id}>
                     {savingId === product.id ? "Guardando…" : "Guardar cambios"}
                   </button>
